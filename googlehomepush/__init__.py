@@ -1,4 +1,5 @@
 import pychromecast
+import time
 from .googletts import googleTTS_builder
 
 name = "googlehomepush"
@@ -18,7 +19,7 @@ class GoogleHome:
         if devicename != None:
             chromecasts = pychromecast.get_chromecasts()
             filteredChromeCast = filter(lambda c: c.host == devicename or c.device.friendly_name == devicename , chromecasts)
-            
+
             try:
                 self.cc = next(filteredChromeCast)
             except StopIteration:
@@ -29,6 +30,7 @@ class GoogleHome:
         else:
             raise ValueError('host or devicename is mandatory to create a GoogleHome object.')
 
+        self.vol_prec = 0
         self.ttsbuilder = ttsbuilder
 
     def say(self, text, lang = 'en-US'):
@@ -41,3 +43,14 @@ class GoogleHome:
         mc.play_media(url, contenttype)
         mc.block_until_active()
         print("played url " + url)
+
+    def volume(self, vol_num):
+        self.cc.wait()
+        self.vol_prec = self.cc.status.volume_level * 100
+
+        self.cc.set_volume(vol_num / 100)
+
+    def resetVolume(self):
+        self.cc.wait()
+        time.sleep(10)
+        self.cc.set_volume(self.vol_prec)
